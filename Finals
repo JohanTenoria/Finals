@@ -1,0 +1,42 @@
+import openai
+from flask import Flask, request, jsonify
+import matplotlib.pyplot as plt
+
+# Initialize Flask app
+app = Flask(__name__)
+
+# OpenAI API key (replace with your key)
+openai.api_key = "your-openai-api-key"
+
+# Route for chatbot interaction
+@app.route('/chat', methods=['POST'])
+def chat():
+    user_message = request.json.get('message')
+    
+    if "plot" in user_message.lower():
+        # Example graphics generation: a simple line plot
+        plt.figure(figsize=(6, 4))
+        plt.plot([1, 2, 3, 4], [1, 4, 9, 16], marker='o', label='y = x^2')
+        plt.title("Simple Line Plot")
+        plt.xlabel("X-axis")
+        plt.ylabel("Y-axis")
+        plt.legend()
+        plt.grid(True)
+        plt.savefig("plot.png")
+        plt.close()
+        return jsonify({"response": "Here is your plot!", "plot": "plot.png"})
+    else:
+        # Generate a response using OpenAI's GPT model
+        try:
+            response = openai.Completion.create(
+                engine="text-davinci-003",
+                prompt=f"User: {user_message}\nChatbot:",
+                max_tokens=100
+            )
+            return jsonify({"response": response.choices[0].text.strip()})
+        except Exception as e:
+            return jsonify({"response": f"Error: {str(e)}"})
+
+# Run the Flask app
+if __name__ == "__main__":
+    app.run(debug=True)
